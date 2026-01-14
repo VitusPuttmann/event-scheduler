@@ -4,6 +4,7 @@ Define data class for events.
 
 from dataclasses import dataclass
 from datetime import datetime, date, time
+from typing import List
 
 
 @dataclass
@@ -15,6 +16,7 @@ class Event:
     event_start_time: time | None = None
     event_end_time: time | None = None
     event_venue: str | None = None
+    event_description: str | None = None
 
 
     @classmethod
@@ -38,5 +40,6 @@ class Event:
                 datetime.strptime(data["end"], "%H:%M").time()
                 if opt("end") else None
             ),
-            event_venue=opt("venue")
+            event_venue=opt("venue"),
+            event_description=opt("description")
         )
