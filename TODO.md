@@ -1,55 +1,56 @@
-# To-Dos for the event scheduler
+# To-Dos for the Event Scheduler
 
 ## Current
 
-. Implement two AI tools (event search, consider using Tavily search tool, and selection or output processing)
+. Implement async / await in nodes
 . Implement testing
 . Implement logging
-. Extend initial user input in main.py to include interests
-. Establish Telegram connection for user input or output
-. Establish automated connection for event input (remove events.csv)
-. Consider including validation in state.py (using field_validator and ValidationError)
+. Improve event search:
+    . Check with_structured_output from LangChain
+. Improve event selection:
+    . Consider create_react_agent from LangGraph
+    . Use interrupt or graph.update_state() for user feedback (consider feedback on available events for final selection of subset)
+    . Consider establishing special connection (e.g., Telegram) for user input
+. Implement LLM-based reflection at some point
 . Implement graceful degradation
-. Implement config schema
-    from typing_extensions import TypedDict
-    from langchain_core.runnables import RunnableConfig
-    class GraphConfigSchema(TypedDict):
-        llm_model_name: str
-        temperature: float
-    builder = StateGraph(MyState, config_schema=GraphConfigSchema)
-
-. Relevant design issues
-    . Use of operator.add and add_messages
-    . Use async and await
-    . Use try-except
-    . Use checkpointers for fault-tolerance and error recovery
+. Consider implementing checkpointers for fault-tolerance and error recovery
 
 ## Files
 
-### my_graph/state.py
-. Develop state schema further
+### scheduler_graph/state.py
+. Specify type hinting for events_raw
+. Consider including validation (using field_validator and ValidationError)
 
-### my_graph/nodes.py
+### scheduler_graph/nodes.py
 . Implement error handling for reading file and input to Event.from_dict()
-. Implement automatic retrieval of events (either API or AI)
-. Expand filtering to include user interests (based on expanded initial input)
-. Deal with potential appearance of None in output text
+. Improve automatic retrieval of events (ideally via API)
 
-### my_graph/edges.py
+### scheduler_graph/edges.py
 . Add actual edges or delete when not required
 
-### my_graph/main.py
+### scheduler_graph/main.py
 . Implement error and type mismatch handling for user input
 
-### my_graph/tools.py
+### scheduler_graph/tools.py
 . Implement actual tools or delete when not required
 
-### event.py
+### scheduler_graph/event.py
 . Implement error handling for required fields of Event
-. Consider defining class Artist and changing related field of Event
 
-### .env.example
-. Implement example
+### scheduler_graph/search.py
+. Consider storage of raw and refined output data
+. Consider implementing dataclass for search results
+
+### scheduler_graph/llm.py
+. Include model parameters in environment variables
+. Include cost control
 
 ### langgraph.json
 . Update file
+
+
+# Questions
+
+. Does the overall project structure make sense?
+. Is the wrapping logic of the web search client reasonable? Is it problematic
+    where the service_registry is placed?
