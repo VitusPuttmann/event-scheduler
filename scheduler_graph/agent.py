@@ -4,8 +4,8 @@ Compile the LangGraph.
 
 from langgraph.graph import StateGraph, START, END
 
-from my_graph.state import AgentState
-from my_graph.nodes import find_events, filter_events, finalize_output
+from scheduler_graph.state import AgentState
+from scheduler_graph.nodes import find_events, filter_events, finalize_output
 
 
 builder = StateGraph(AgentState)

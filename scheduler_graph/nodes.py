@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from langchain_core.runnables import RunnableConfig
 
-from my_graph.state import AgentState
+from scheduler_graph.state import AgentState
 from models.event import Event
 
 

@@ -2,7 +2,7 @@
 Invoke the LangGraph application.
 """
 
-from my_graph.agent import graph
+from scheduler_graph.agent import graph
 
 
 if __name__ == "__main__":
