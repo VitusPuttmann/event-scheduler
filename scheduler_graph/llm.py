@@ -2,11 +2,12 @@
 Define class for LLM requests.
 """
 
-import json
 import os
-from typing import Any
+from typing import List
 
 from langchain_openai import ChatOpenAI
+
+from models.event import Event
 
 
 class LLMClientOpenAI():
@@ -14,12 +15,12 @@ class LLMClientOpenAI():
         self.client = ChatOpenAI(api_key=api_key, model_name="gpt-4o-mini")
     
     def query(
-            self, system_message: str, query_message: str, context: dict[str, Any]
+            self, system_message: str, query_message: str, context: str | dict[str, List[Event]]
         ) -> str:
         messages = [
             {"role": "system", "content": system_message},
             {"role": "user", "content": query_message},
-            {"role": "user", "content": f"Context:\n{json.dumps(context, ensure_ascii=False)}"}
+            {"role": "user", "content": f"Context:\n{context}"}
         ]
         response = self.client.invoke(messages)
         
@@ -40,7 +41,7 @@ class LLMClient():
         self.client = self.service_registry[service]()
 
     def query(
-            self, system_message: str, query_message: str, context: dict[str, Any]
+            self, system_message: str, query_message: str, context: str | dict[str, List[Event]]
         ) -> str:
         
         response = self.client.query(system_message, query_message, context)

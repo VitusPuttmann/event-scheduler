@@ -76,7 +76,7 @@ def format_events(
               ]
             }
         """
-    context=state.events_raw
+    context=json.dumps(state.events_raw, ensure_ascii=False)
 
     llm_output = llm_client.query(system_message, query_message, context)
 
