@@ -1,5 +1,5 @@
 """
-Define nodes for the LangGraph application.
+Nodes for the LangGraph application.
 """
 
 import json
@@ -8,10 +8,11 @@ import os
 from typing import List, Optional
 
 from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import SystemMessage, HumanMessage
 
 from scheduler_graph.state import AgentState
 from scheduler_graph.search import WebSearchClient
-from scheduler_graph.llm import LLMClient
+from scheduler_graph.llm import create_llm_client
 from models.event import Event
 
 
@@ -44,7 +45,7 @@ def format_events(
     """
 
     # Query LLM to transform unstructured output into JSON
-    llm_client = LLMClient(service=os.environ["LLM_SERVICE"])
+    llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
     
     system_message = """
         Return JSON only. No markdown fences. Use German.
@@ -78,10 +79,14 @@ def format_events(
         """
     context=json.dumps(state.events_raw, ensure_ascii=False)
 
-    llm_output = llm_client.query(system_message, query_message, context)
+    llm_output = llm_client.invoke([
+        SystemMessage(content=system_message),
+        HumanMessage(content=query_message),
+        HumanMessage(content=context)
+    ])
 
     try:
-        payload = json.loads(llm_output)
+        payload = json.loads(llm_output.content)
     except json.JSONDecodeError as e:
         raise ValueError(f"LLM did not return valid JSON: {e}") from e
 
@@ -124,7 +129,7 @@ def finalize_output(
     ) -> dict[str, str]:
 
     # Query LLM for final output message
-    llm_client = LLMClient(service=os.environ["LLM_SERVICE"])
+    llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
     
     system_message = """
         You are a friendly guide that provides helpful event suggestions in German.
@@ -135,10 +140,14 @@ def finalize_output(
         If there are no events in the list, only state kindly that there are no
         suitable events (without offering any further assistance).
         """
-    context=state.events_list
+    context=" ".join(str(e) for e in state.events_list)
 
-    events_text = llm_client.query(system_message, query_message, context)
+    events_text = llm_client.invoke([
+        SystemMessage(content=system_message),
+        HumanMessage(content=query_message),
+        HumanMessage(content=context)
+    ])
 
     # Update state
-    updated_state = {"output": events_text}
+    updated_state = {"output": events_text.content}
     return updated_state

@@ -1,10 +1,9 @@
 """
-Define data class for events.
+Data class for events.
 """
 
 from dataclasses import dataclass
 from datetime import datetime, date, time
-from typing import List
 
 
 @dataclass
@@ -42,4 +41,11 @@ class Event:
             ),
             event_venue=opt("venue"),
             event_description=opt("description")
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"{self.event_name}: {self.event_type}, {self.event_artists}, "
+            f"{self.event_date}, {self.event_start_time}, {self.event_end_time}, "
+            f"{self.event_venue}, {self.event_description}."
         )

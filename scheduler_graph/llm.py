@@ -1,49 +1,32 @@
 """
-Define class for LLM requests.
+A factory for creating LLM clients.
 """
 
 import os
-from typing import List
 
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 
-from models.event import Event
+
+llm_service_registry = {
+    "OpenAI": lambda: ChatOpenAI(
+        api_key=os.environ["OPENAI_API_KEY"],
+        model_name=os.environ["OPENAI_MODEL"]
+    )
+}
 
 
-class LLMClientOpenAI():
-    def __init__(self, api_key: str):
-        self.client = ChatOpenAI(api_key=api_key, model_name="gpt-4o-mini")
-    
-    def query(
-            self, system_message: str, query_message: str, context: str | dict[str, List[Event]]
-        ) -> str:
-        messages = [
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": query_message},
-            {"role": "user", "content": f"Context:\n{context}"}
-        ]
-        response = self.client.invoke(messages)
-        
-        return response.content
-
-
-class LLMClient():
+def create_llm_client(service: str) -> BaseChatModel:
     """
-    General client for conducting LLM requests. Specific service defined as
-    environment variable.
+    A provider-agnostic factory that returns an instance of a sub-class
+    of the LangChain BaseChatModel.
+    The specific service and its configuration are defined as environment
+    variables via .env.
     """
 
-    service_registry = {
-        "OpenAI": lambda: LLMClientOpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    }
+    try:
+        factory = llm_service_registry[service]
+    except KeyError:
+        raise ValueError(f"Unsupported LLM service: '{service}'.")
 
-    def __init__(self, service: str):
-        self.client = self.service_registry[service]()
-
-    def query(
-            self, system_message: str, query_message: str, context: str | dict[str, List[Event]]
-        ) -> str:
-        
-        response = self.client.query(system_message, query_message, context)
-
-        return response
+    return factory()
