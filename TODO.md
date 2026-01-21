@@ -2,56 +2,59 @@
 
 ## Current
 
-- Implement async / await for web search and LLM queries
-- Ensure consistent input to LLM via dataclass
-- Implement testing
-- Implement logging
-- Improve event search:
-    - Check with_structured_output from LangChain
-- Improve event selection:
-    - Consider create_react_agent from LangGraph
-    - Use interrupt or graph.update_state() for user feedback (consider feedback on available events for final selection of subset)
-    - Consider establishing special connection (e.g., Phone) for user input
+- Implement web search as LLM tool for augmenting event data
+- Implement output filtering based on user input (interrupt(value) and Command(resume=value))
+- Implement async ... await
+- Check overall directory structure
+- Implement logging and checkpointers for fault-tolerance and error recovery
+    - graph_with_breakpoint = builder.compile(interrupt_before=["my_node"], checkpointer=memory_saver) # Breakpoint before 'my_node'
+- Revise the entire Event dataclass with a view to required transformations throughout the graph
 - Implement LLM-based reflection at some point
 - Implement graceful degradation
-- Consider implementing checkpointers for fault-tolerance and error recovery
+
 
 ## Files
 
+### main.py
+- Consider shifting functions for input validation and database initiation to
+    separate scripts
+
 ### scheduler_graph/state.py
-- Specify type hinting for events_raw
-- Consider including validation (using field_validator and ValidationError)
+
+
+### scheduler_graph/agent.py
+
 
 ### scheduler_graph/nodes.py
-- Implement error handling for reading file and input to Event.from_dict()
+- Check possibilities for shifting functions and logic to separate scripts
 - Improve automatic retrieval of events (ideally via API)
 
 ### scheduler_graph/edges.py
-- Add actual edges or delete when not required
+- Adapt routing logic to creation of database at graph start
 
-### scheduler_graph/main.py
-- Implement error and type mismatch handling for user input
-
-### scheduler_graph/tools.py
-- Implement actual tools or delete when not required
-
-### scheduler_graph/event.py
-- Implement error handling for required fields of Event
-
-### scheduler_graph/search.py
-- Consider storage of raw and refined output data
-- Consider implementing dataclass for search results
+### models/event.py
+- Reconsider entire class structure given required transformations
+- Implement error handling
 
 ### scheduler_graph/llm.py
-- Include model parameters in environment variables
 - Include cost control
+- Check additional model parameters for relevant options
+
+### scheduler_graph/crawler.py
+- Account for limits of scraping and implement safeguards via rate-limit and back off on errors
+- Implement that results requiring additional website loads are included
+    - Consider create_react_agent from LangGraph
+- Consider including additional fields from the html
+- Consider extending it to other websites
+
+### scheduler_graph/parser.py
+- Check parsing logic in detail
+
+### scheduler_graph/database.py
+- Address security of f-strings
+
+### scheduler_graph/tools.py
+- Implement tools for web search
 
 ### langgraph.json
 - Update file
-
-
-# Questions
-
-- Does the overall project structure make sense?
-- Is the wrapping logic of the web search client reasonable? Is it problematic
-    where the service_registry is placed?

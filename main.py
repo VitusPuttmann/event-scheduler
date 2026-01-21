@@ -2,19 +2,61 @@
 Invoke the LangGraph application.
 """
 
+import sys
+import os
 from dotenv import load_dotenv
+from pathlib import Path
+from datetime import datetime
+
+import duckdb
 
 from scheduler_graph.agent import graph
+from scheduler_graph.database import ensure_table, EVENTS_TABLE
 
 
 load_dotenv()
 
+MAX_ATTEMPTS = 3
+
+
+def init_db() -> None:
+    db_path = os.environ["DUCKDB_PATH"]
+
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+
+    with duckdb.connect(db_path) as con:
+        ensure_table(con, EVENTS_TABLE)
+
+
+def obtain_input_date() -> str:
+    for attempt in range(MAX_ATTEMPTS):
+        user_input = input(
+            "Gib das gewünschte Datum im Format 'JJJJ-MM-TT' an: "
+        ).strip()
+
+        try:
+            input_date = datetime.strptime(user_input, "%Y-%m-%d").date()
+        except ValueError:
+            print("Das Format des eingegebenen Datums ist ungültig.")
+        else:    
+            if input_date >= datetime.today().date():
+                return user_input
+            print(
+                "Das Datum liegt in der Vergangenheit. Bitte gib ein anderes Datum an."
+            )
+
+        if attempt == MAX_ATTEMPTS - 1:
+            print("Vielen Dank für Dein Interesse.")
+            sys.exit(1)
+
 
 if __name__ == "__main__":
+    user_input_date = obtain_input_date()
     initial_state = {
-        "user_input_date": input("Gib das gewünschte Datum an (im Format JJJJ-MM-TT): "),
-        "user_input_type": input("Gib die gewünschte Veranstaltungsart an (z.B. Konzert oder Musical): ")
+        "user_input_date": user_input_date
     }
+
+    init_db()
     
     graph_result = graph.invoke(initial_state)
     output = graph_result["output"]

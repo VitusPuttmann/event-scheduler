@@ -1,5 +1,5 @@
 """
-A factory for creating LLM clients.
+Factory for creating LLM clients.
 """
 
 import os

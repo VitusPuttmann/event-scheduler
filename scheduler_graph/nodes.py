@@ -2,102 +2,137 @@
 Nodes for the LangGraph application.
 """
 
-import json
-from datetime import datetime
+from __future__ import annotations
+
 import os
+import json
+from pydantic import ValidationError
 from typing import List, Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage, HumanMessage
 
+from models.event import Event, AugmentationResult, dicts_to_events
 from scheduler_graph.state import AgentState
-from scheduler_graph.search import WebSearchClient
+from scheduler_graph.crawler import fetch_website
+from scheduler_graph.parser import extract_events
+from scheduler_graph.database import persist_events_to_db, load_events_from_db
 from scheduler_graph.llm import create_llm_client
-from models.event import Event
+
+
+MAX_RETRIES = 3
 
 
 def find_events(
         state: AgentState, config: Optional[RunnableConfig] = None
-    ) -> dict[str, str]:
+    ) -> dict[str, List[Event]]:
     """
-    Obtain data with events from web search.
+    Obtain and prepare data with events from web scraping.
     """
 
-    # Instantiate client
-    search_client = WebSearchClient(service=os.environ["WEBSEARCH_SERVICE"])
+    # Crawl web page
+    date, url, html = fetch_website(state.user_input_date)
+    
+    # Parse output
+    events = extract_events(html, url)
 
-    # Perform search
-    input_date = datetime.strptime(state.user_input_date, "%Y-%m-%d").date()
-    response = search_client.client.search(
-        f"Veranstaltungen in Hamburg am {input_date}"
-    )
-
+    # Persist events to database
+    persist_events_to_db(os.environ["DUCKDB_PATH"], events)
+    
     # Update state
-    updated_state = {"events_raw": response}
+    updated_state = {"events_raw": events}
     return updated_state
 
 
-def format_events(
+def augment_events(
         state: AgentState, config: Optional[RunnableConfig] = None
     ) -> dict[str, List[Event]]:
     """
-    Transform raw web search output into JSON and then into list of events.
+    Augment data via LLM.
     """
 
-    # Query LLM to transform unstructured output into JSON
+    # Load events from database
+    events_list_tuples = load_events_from_db(
+        os.environ["DUCKDB_PATH"], state.user_input_date
+    )
+
+    # Prepare events for LLM ingestion
+    events_list_dicts = []
+    for (
+        event_id,
+        event_name,
+        event_date,
+        event_time,
+        event_venue,
+        event_type,
+        event_description,
+        event_url,
+    ) in events_list_tuples:
+        events_list_dicts.append(
+            {
+                "event_id": event_id,
+                "event_name": event_name,
+                "event_date": event_date.isoformat(),
+                "event_time": event_time[:5],
+                "event_venue": event_venue,
+                "event_url": event_url,
+                "event_type": event_type,
+                "event_description": event_description,
+            }
+        )
+
+    # Query LLM to define event type and expand event description
     llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
-    
+
+    augmenter = llm_client.with_structured_output(AugmentationResult)
+
     system_message = """
-        Return JSON only. No markdown fences. Use German.
+        You augment information on events. Only fill event_type and
+        event_description.
+        Infer event_type from the event_name and event_description. Do not
+        invent facts.
         """
     query_message = """
-        Given the input provided as context, identify events in the input,
-        including their:
-        . type (e.g., "Konzert", "Ausstellung")
-        . name (e.g., "Legacy Tour")
-        . artists (e.g., "Markus Müller")
-        . date (in the format YYYY-MM-DD)
-        . start time (in the format HH:MM)
-        . end time (in the format HH:MM)
-        . venue (e.g., "Elbphilharmonie")
-        . description of the event (as plain text in German)
-        Return a JSON object with one key that follows the structure:
-            {
-              "events": [
-                {
-                  "type": "…",
-                  "name": "…",
-                  "artists": "…",
-                  "date": "2026-02-02",
-                  "start": "19:30",
-                  "end": "22:00",
-                  "venue": "…",
-                  "description": "…"
-                }
-              ]
-            }
+        Return patches.
         """
-    context=json.dumps(state.events_raw, ensure_ascii=False)
+    context=json.dumps(events_list_dicts, ensure_ascii=False)
 
-    llm_output = llm_client.invoke([
-        SystemMessage(content=system_message),
-        HumanMessage(content=query_message),
-        HumanMessage(content=context)
-    ])
+    msg = [
+        ("system", system_message),
+        ("user", query_message),
+        ("user", context),
+    ]
 
-    try:
-        payload = json.loads(llm_output.content)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"LLM did not return valid JSON: {e}") from e
+    patches = []
+    for attempt in range(MAX_RETRIES):
+        try:
+            llm_output: AugmentationResult = augmenter.invoke(msg)
+            patches = llm_output.patches
+            break
+        except ValidationError:
+            if attempt == MAX_RETRIES - 1:
+                patches = []
 
-    # Store entries as list of events to be stored in state
-    events = []
-    for entry in payload.get("events", []):
-        event = Event.from_dict(entry)
-        events.append(event)
+    for patch in patches:
+        patch_clean = {
+            k: v for k, v in patch.model_dump().items()
+            if v is not None and k != "event_id"}
+        
+        idx = next(
+            (i for i, d in enumerate(events_list_dicts)
+             if d["event_id"] == patch.event_id),
+            None,
+        )
+
+        if idx is not None:
+            events_list_dicts[idx] |= patch_clean
+
+    # Persist events to database
+    events_list_events = dicts_to_events(events_list_dicts)
+    persist_events_to_db(os.environ["DUCKDB_PATH"], events_list_events)
 
     # Update state
-    updated_state = {"events_list": events}
+    updated_state = {"events_list": events_list_events}
     return updated_state
 
 
@@ -105,23 +140,10 @@ def filter_events(
         state: AgentState, config: Optional[RunnableConfig] = None
     ) -> dict[str, List[Event]]:
     """
-    Filter list of events based on initial user input on preferred event type.
+    Filter list of events based on user input on preferred event type.
     """
 
-    # Obtain initial list of events
-    events_initial = state.events_list
-
-    # Obtain user input on desired date as date
-    input_type = state.user_input_type.lower().strip()
-
-    # Filter event list based on user input
-    events_filtered = [
-        e for e in events_initial if e.event_type.lower().strip() == input_type
-    ]
-
-    # Update state
-    updated_state = {"events_list": events_filtered}
-    return updated_state
+    pass
 
 
 def finalize_output(
@@ -133,10 +155,11 @@ def finalize_output(
     
     system_message = """
         You are a friendly guide that provides helpful event suggestions in German.
+        Use the "Du"-form and not the "Sie"-form.
         """
     query_message = """
         Given the input provided as context, produce a text that presents the
-        events in the list with as much information as possible.
+        events in the list with basic information.
         If there are no events in the list, only state kindly that there are no
         suitable events (without offering any further assistance).
         """
