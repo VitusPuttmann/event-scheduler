@@ -2,7 +2,6 @@
 
 ## Current
 
-- Implement web search as LLM tool for augmenting event data
 - Implement output filtering based on user input (interrupt(value) and Command(resume=value))
 - Implement async ... await
 - Check overall directory structure
@@ -32,6 +31,9 @@
 ### scheduler_graph/edges.py
 - Adapt routing logic to creation of database at graph start
 
+### scheduler_graph/tools.py
+- Adapt call limiter to restrict explicity to one per loop iteration in node
+
 ### models/event.py
 - Reconsider entire class structure given required transformations
 - Implement error handling
@@ -52,9 +54,6 @@
 
 ### scheduler_graph/database.py
 - Address security of f-strings
-
-### scheduler_graph/tools.py
-- Implement tools for web search
 
 ### langgraph.json
 - Update file

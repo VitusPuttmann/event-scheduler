@@ -14,6 +14,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from models.event import Event, AugmentationResult, dicts_to_events
 from scheduler_graph.state import AgentState
+from scheduler_graph.tools import search_web
 from scheduler_graph.crawler import fetch_website
 from scheduler_graph.parser import extract_events
 from scheduler_graph.database import persist_events_to_db, load_events_from_db
@@ -83,8 +84,8 @@ def augment_events(
 
     # Query LLM to define event type and expand event description
     llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
-
-    augmenter = llm_client.with_structured_output(AugmentationResult)
+    llm_client_with_tool = llm_client.bind_tools([search_web])
+    augmenter = llm_client_with_tool.with_structured_output(AugmentationResult)
 
     system_message = """
         You augment information on events. Only fill event_type and
@@ -95,7 +96,7 @@ def augment_events(
     query_message = """
         Return patches.
         """
-    context=json.dumps(events_list_dicts, ensure_ascii=False)
+    context = json.dumps(events_list_dicts, ensure_ascii=False)
 
     msg = [
         ("system", system_message),
