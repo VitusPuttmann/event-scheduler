@@ -5,6 +5,8 @@ Nodes for the LangGraph application.
 from __future__ import annotations
 
 import os
+from datetime import datetime
+from uuid import uuid4
 import json
 from pydantic import ValidationError
 from typing import List, Optional
@@ -14,6 +16,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from models.event import Event, AugmentationResult, dicts_to_events
 from scheduler_graph.state import AgentState
+from ai_logging.log_llm import LLMCallEvent, log_llmcall
 from scheduler_graph.tools import search_web
 from scheduler_graph.crawler import fetch_website
 from scheduler_graph.parser import extract_events
@@ -84,6 +87,7 @@ def augment_events(
 
     # Query LLM to define event type and expand event description
     llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
+
     llm_client_with_tool = llm_client.bind_tools([search_web])
     augmenter = llm_client_with_tool.with_structured_output(AugmentationResult)
 
@@ -105,7 +109,10 @@ def augment_events(
     ]
 
     patches = []
+    attempts = 0
     for attempt in range(MAX_RETRIES):
+        attempts += 1
+
         try:
             llm_output: AugmentationResult = augmenter.invoke(msg)
             patches = llm_output.patches
@@ -132,8 +139,22 @@ def augment_events(
     events_list_events = dicts_to_events(events_list_dicts)
     persist_events_to_db(os.environ["DUCKDB_PATH"], events_list_events)
 
+    # Log information on LLM call
+    llmcall_log_entry: LLMCallEvent = log_llmcall(
+        provider = os.environ["LLM_SERVICE"],
+        messages = msg,
+        output = patches,
+        attempts = attempts,
+        node = "augment_events",
+        timestamp = str(datetime.now().isoformat()),
+        request_id = str(uuid4())
+    )
+
     # Update state
-    updated_state = {"events_list": events_list_events}
+    updated_state = {
+        "events_list": events_list_events,
+        "log_llmcalls": state.log_llmcalls + [llmcall_log_entry]
+    }
     return updated_state
 
 

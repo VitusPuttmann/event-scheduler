@@ -2,6 +2,7 @@
 Invoke the LangGraph application.
 """
 
+import argparse
 import sys
 import os
 from dotenv import load_dotenv
@@ -18,6 +19,20 @@ load_dotenv()
 
 MAX_ATTEMPTS = 3
 
+thread_id = "test_thread_001"
+config = {
+    "configurable": {"thread_id": thread_id}
+}
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--debug-checkpoints",
+        action="store_true",
+        help="Print checkpoint count and logged LLM calls",
+    )
+    return parser.parse_args()
 
 def init_db() -> None:
     db_path = os.environ["DUCKDB_PATH"]
@@ -51,6 +66,8 @@ def obtain_input_date() -> str:
 
 
 if __name__ == "__main__":
+    args = parse_args()
+
     user_input_date = obtain_input_date()
     initial_state = {
         "user_input_date": user_input_date
@@ -58,6 +75,14 @@ if __name__ == "__main__":
 
     init_db()
     
-    graph_result = graph.invoke(initial_state)
+    graph_result = graph.invoke(initial_state, config=config)
     output = graph_result["output"]
     print(output)
+
+    if args.debug_checkpoints:
+        history = list(graph.get_state_history(config))
+        print(f"{len(history)} checkpoints recorded")
+        try:
+            print(graph_result["log_llmcalls"])
+        except KeyError:
+            print("No LLM calls logged.")

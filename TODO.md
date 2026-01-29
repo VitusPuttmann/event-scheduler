@@ -1,12 +1,12 @@
 # To-Dos for the Event Scheduler
 
+
 ## Current
 
 - Implement output filtering based on user input (interrupt(value) and Command(resume=value))
 - Implement async ... await
+- Adapt logging for production
 - Check overall directory structure
-- Implement logging and checkpointers for fault-tolerance and error recovery
-    - graph_with_breakpoint = builder.compile(interrupt_before=["my_node"], checkpointer=memory_saver) # Breakpoint before 'my_node'
 - Revise the entire Event dataclass with a view to required transformations throughout the graph
 - Implement LLM-based reflection at some point
 - Implement graceful degradation
@@ -54,6 +54,9 @@
 
 ### scheduler_graph/database.py
 - Address security of f-strings
+
+### ai_logging/log_llm.py
+
 
 ### langgraph.json
 - Update file
