@@ -2,6 +2,8 @@
 Database access for loading and persisting events.
 """
 
+import os
+from pathlib import Path
 from typing import List
 
 import duckdb
@@ -37,6 +39,13 @@ def ensure_table(con: duckdb.DuckDBPyConnection, table_name: str) -> None:
             )
             """
         )
+
+
+def init_db(db_path) -> None:
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+
+    with duckdb.connect(db_path) as con:
+        ensure_table(con, EVENTS_TABLE)
 
 
 def persist_events_to_db(db_path: str, events: List[Event]) -> None:

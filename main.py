@@ -3,16 +3,13 @@ Invoke the LangGraph application.
 """
 
 import argparse
-import sys
-import os
-from dotenv import load_dotenv
-from pathlib import Path
 from datetime import datetime
-
-import duckdb
+from dotenv import load_dotenv
+import os
+import sys
 
 from scheduler_graph.agent import graph
-from scheduler_graph.database import ensure_table, EVENTS_TABLE
+from scheduler_graph.database import ensure_table, init_db, EVENTS_TABLE
 
 
 load_dotenv()
@@ -24,6 +21,8 @@ config = {
     "configurable": {"thread_id": thread_id}
 }
 
+db_path = os.environ["DUCKDB_PATH"]
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -33,14 +32,6 @@ def parse_args() -> argparse.Namespace:
         help="Print checkpoint count and logged LLM calls",
     )
     return parser.parse_args()
-
-def init_db() -> None:
-    db_path = os.environ["DUCKDB_PATH"]
-
-    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-
-    with duckdb.connect(db_path) as con:
-        ensure_table(con, EVENTS_TABLE)
 
 
 def obtain_input_date() -> str:
@@ -73,7 +64,7 @@ if __name__ == "__main__":
         "user_input_date": user_input_date
     }
 
-    init_db()
+    init_db(db_path)
     
     graph_result = graph.invoke(initial_state, config=config)
     output = graph_result["output"]

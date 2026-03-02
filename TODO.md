@@ -1,6 +1,5 @@
 # To-Dos for the Event Scheduler
 
-
 ## Current
 
 - Implement output filtering based on user input (interrupt(value) and Command(resume=value))
@@ -60,3 +59,17 @@
 
 ### langgraph.json
 - Update file
+
+
+## Information on Database
+
+Dates covered in local database:
+2026-02-20
+2026-02-21
+2026-02-22
+2026-02-23
+2026-02-24
+2026-02-25
+2026-02-26
+2026-03-09
+2026-03-15
