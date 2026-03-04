@@ -5,7 +5,7 @@ Nodes for the LangGraph application.
 from __future__ import annotations
 
 import os
-from datetime import datetime
+from datetime import datetime, date, time
 from uuid import uuid4
 import json
 from pydantic import ValidationError
@@ -13,10 +13,11 @@ from typing import List, Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage, HumanMessage
+from langgraph.types import interrupt
 
 from models.event import Event, AugmentationResult, dicts_to_events
-from scheduler_graph.state import AgentState
 from ai_logging.log_llm import LLMCallEvent, log_llmcall
+from scheduler_graph.state import AgentState
 from scheduler_graph.tools import search_web
 from scheduler_graph.crawler import fetch_website
 from scheduler_graph.parser import extract_events
@@ -158,6 +159,40 @@ def augment_events(
     return updated_state
 
 
+def load_events(
+    state: AgentState, config: Optional[RunnableConfig] = None
+) -> dict:
+    rows = load_events_from_db(os.environ["DUCKDB_PATH"], state.user_input_date)
+
+    events = []
+    for (
+        event_id,
+        event_name,
+        event_date,
+        event_time,
+        event_venue,
+        event_type,
+        event_description,
+        event_url) in rows:
+        t = datetime.strptime(event_time[:5], "%H:%M").time()
+        events.append(Event(
+            event_id=event_id,
+            event_name=event_name,
+            event_date=event_date,
+            event_time=t,
+            event_venue=event_venue,
+            event_type=event_type,
+            event_description=event_description,
+            event_url=event_url
+        ))
+    
+    # Update state
+    updated_state = {
+        "events_list": events
+    }
+    return updated_state
+
+
 def filter_events(
         state: AgentState, config: Optional[RunnableConfig] = None
     ) -> dict[str, List[Event]]:
@@ -165,7 +200,53 @@ def filter_events(
     Filter list of events based on user input on preferred event type.
     """
 
-    pass
+    type_map = {
+        "Klassik": ("1", "Klassik"),
+        "Jazz, Blues, Funk": ("2", "Jazz, Blues, Funk"),
+        "Rock, Indie, Metal": ("3", "Rock, Indie, Metal"),
+        "HipHop, RnB, Soul": ("4", "HipHop, RnB, Soul"),
+        "Elektro, Techno, House": ("5", "Elektro, Techno, House"),
+        "Pop, Schlager": ("6", "Pop, Schlager")
+    }
+    type_map_rev = {num: t for t, (num, _) in type_map.items()}
+
+    event_types = [
+        e.event_type for e in state.events_list if e.event_type is not None
+    ]
+
+    seen = set()
+    event_types_unique = [
+        t for t in event_types if not (t in seen or seen.add(t))
+    ]
+
+    if not event_types_unique:
+        events_filtered = []
+    else:
+        event_types_unique_numbered = [
+            f"{type_map[e][0]} {type_map[e][1]}" for e in event_types_unique
+        ]
+
+        user_choice = interrupt({
+            "question": "Welches Musikgenre möchtest Du hören? Gib die dazugehörige Nummer an.",
+            "data": event_types_unique_numbered
+        })
+        user_choice = str(user_choice).strip()
+        
+        event_type_selected = type_map_rev.get(user_choice)
+
+        if event_type_selected:
+            events_filtered = [
+                e for e in state.events_list if
+                    e.event_type == event_type_selected
+            ]
+        else:
+            events_filtered = []
+    
+    # Update state
+    updated_state = {
+        "events_list_filtered": events_filtered
+    }
+    return updated_state
 
 
 def finalize_output(
@@ -185,7 +266,7 @@ def finalize_output(
         If there are no events in the list, only state kindly that there are no
         suitable events (without offering any further assistance).
         """
-    context=" ".join(str(e) for e in state.events_list)
+    context=" ".join(str(e) for e in state.events_list_filtered)
 
     events_text = llm_client.invoke([
         SystemMessage(content=system_message),

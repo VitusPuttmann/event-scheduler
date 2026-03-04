@@ -72,7 +72,7 @@ def load_events_from_db(db_path: str, select_date: str) -> List[tuple]:
             f"""
             SELECT *
               FROM {EVENTS_TABLE}
-             WHERE event_date = ?""",
+             WHERE event_date = CAST(? AS DATE)""",
             [select_date],
         ).fetchall()
     return result

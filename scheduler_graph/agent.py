@@ -9,6 +9,7 @@ from scheduler_graph.state import AgentState
 from scheduler_graph.nodes import (
     find_events,
     augment_events,
+    load_events,
     filter_events,
     finalize_output,
 )
@@ -20,6 +21,7 @@ checkpointer = InMemorySaver()
 
 builder.add_node("find_events", find_events)
 builder.add_node("augment_events", augment_events)
+builder.add_node("load_events", load_events)
 builder.add_node("filter_events", filter_events)
 builder.add_node("finalize_output", finalize_output)
 
@@ -28,11 +30,12 @@ builder.add_conditional_edges(
     check_data_availability,
     {
         "data_not_available": "find_events",
-        "data_available": "filter_events",
+        "data_available": "load_events",
     },
 )
 builder.add_edge("find_events", "augment_events")
 builder.add_edge("augment_events", "filter_events")
+builder.add_edge("load_events", "filter_events")
 builder.add_edge("filter_events", "finalize_output")
 builder.add_edge("finalize_output", END)
 

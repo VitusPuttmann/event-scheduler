@@ -23,6 +23,9 @@ class AgentState(BaseModel):
     events_list: List[Event] = Field(
         default_factory=list, description="Augmented list of events"
     )
+    events_list_filtered: List[Event] = Field(
+        default_factory=list, description="Augmented list of events filtered based on user input"
+    )
     output: str = Field(
         "", description="Processed event suggestions for user"
     )

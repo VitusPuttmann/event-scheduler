@@ -2,13 +2,13 @@
 
 ## Current
 
-- Implement output filtering based on user input (interrupt(value) and Command(resume=value))
 - Implement async ... await
 - Adapt logging for production
 - Check overall directory structure
 - Revise the entire Event dataclass with a view to required transformations throughout the graph
 - Implement LLM-based reflection at some point
 - Implement graceful degradation
+- Improve handling of user input for event selection
 
 
 ## Files
@@ -71,5 +71,9 @@ Dates covered in local database:
 2026-02-24
 2026-02-25
 2026-02-26
-2026-03-09
-2026-03-15
+2026-03-09 (no events)
+2026-03-13 (no events)
+2026-03-14 (events)
+2026-03-15 (no events)
+2026-03-16 (events)
+2026-03-17 (event)

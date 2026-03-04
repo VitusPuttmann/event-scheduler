@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 import os
 import sys
 
+from langgraph.types import Command
 from scheduler_graph.agent import graph
-from scheduler_graph.database import ensure_table, init_db, EVENTS_TABLE
+from scheduler_graph.database import init_db
+from scheduler_graph.telegram import tg_send, tg_get_last_offset, wait_for_reply
 
 
 load_dotenv()
@@ -21,7 +23,9 @@ config = {
     "configurable": {"thread_id": thread_id}
 }
 
-db_path = os.environ["DUCKDB_PATH"]
+DB_PATH = os.environ["DUCKDB_PATH"]
+
+TG_CHAT_ID = int(os.environ["TELEGRAM_CHAT_ID"])
 
 
 def parse_args() -> argparse.Namespace:
@@ -34,46 +38,84 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def obtain_input_date() -> str:
+def obtain_input_date() -> tuple[str, int | None]:
+    offset = tg_get_last_offset()
+
     for attempt in range(MAX_ATTEMPTS):
-        user_input = input(
-            "Gib das gewünschte Datum im Format 'JJJJ-MM-TT' an: "
-        ).strip()
+        tg_send(
+            TG_CHAT_ID,
+            "Gib das gewünschte Datum im Format 'JJJJ-MM-TT' an:"
+        )
+        user_input, offset = wait_for_reply(TG_CHAT_ID, offset=offset)
+        user_input = user_input.strip()
 
         try:
             input_date = datetime.strptime(user_input, "%Y-%m-%d").date()
         except ValueError:
-            print("Das Format des eingegebenen Datums ist ungültig.")
+            tg_send(
+                TG_CHAT_ID,
+                "Das Format des eingegebenen Datums ist ungültig."
+            )
         else:    
             if input_date >= datetime.today().date():
-                return user_input
-            print(
+                return user_input, offset
+            tg_send(
+                TG_CHAT_ID,
                 "Das Datum liegt in der Vergangenheit. Bitte gib ein anderes Datum an."
             )
 
         if attempt == MAX_ATTEMPTS - 1:
-            print("Vielen Dank für Dein Interesse.")
+            tg_send(TG_CHAT_ID, "Vielen Dank für Dein Interesse.")
             sys.exit(1)
+
+
+def obtain_event_type(
+    question_text: str, offset: int | None
+) -> tuple[str, int | None]:
+    tg_send(TG_CHAT_ID, question_text)
+
+    response, offset = wait_for_reply(TG_CHAT_ID, offset=offset)
+
+    return response, offset
 
 
 if __name__ == "__main__":
     args = parse_args()
+    offset = tg_get_last_offset()
 
-    user_input_date = obtain_input_date()
+    user_input_date, offset = obtain_input_date()
     initial_state = {
         "user_input_date": user_input_date
     }
 
-    init_db(db_path)
+    init_db(DB_PATH)
     
-    graph_result = graph.invoke(initial_state, config=config)
-    output = graph_result["output"]
-    print(output)
+    result = graph.invoke(initial_state, config=config)
+    while "__interrupt__" in result:
+        intr = result["__interrupt__"][0]
+        payload = intr.value
+
+        question_text = payload["question"]
+        for option in payload["data"]:
+            question_text += "\n"
+            question_text += option
+        question_text += "\nDeine Auswahl:"
+
+        user_choice, offset = obtain_event_type(question_text, offset)
+
+        result = graph.invoke(
+            Command(resume=user_choice),
+            config=config
+        )
+
+    output = result["output"]
+    
+    tg_send(TG_CHAT_ID, output)
 
     if args.debug_checkpoints:
         history = list(graph.get_state_history(config))
         print(f"{len(history)} checkpoints recorded")
         try:
-            print(graph_result["log_llmcalls"])
+            print(result["log_llmcalls"])
         except KeyError:
             print("No LLM calls logged.")
