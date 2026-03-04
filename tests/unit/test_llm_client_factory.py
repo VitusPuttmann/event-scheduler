@@ -6,7 +6,7 @@ import pytest
 
 from langchain_openai import ChatOpenAI
 
-from scheduler_graph.llm import create_llm_client
+from scheduler_app.infra.llm import create_llm_client
 
 
 def test_create_llm_client_returns_chatopenai(monkeypatch):

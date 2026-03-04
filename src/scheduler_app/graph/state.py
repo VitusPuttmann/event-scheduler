@@ -5,8 +5,8 @@ Schema for the LangGraph application state.
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from models.event import Event
-from ai_logging.log_llm import LLMCallEvent
+from scheduler_app.models.event import Event
+from scheduler_app.app_logging.log_llm import LLMCallEvent
 
 
 class AgentState(BaseModel):

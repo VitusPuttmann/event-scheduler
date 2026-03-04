@@ -3,9 +3,9 @@ Unit tests for the html parser.
 """
 
 from pathlib import Path
-from datetime import datetime, date, time
+from datetime import datetime
 
-from scheduler_graph.parser import extract_events
+from scheduler_app.services.parser import extract_events
 
 
 FIXTURE_DIR = Path(__file__).parent.parent / "fixtures"

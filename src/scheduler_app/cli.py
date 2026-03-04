@@ -9,9 +9,9 @@ import os
 import sys
 
 from langgraph.types import Command
-from scheduler_graph.agent import graph
-from scheduler_graph.database import init_db
-from scheduler_graph.telegram import tg_send, tg_get_last_offset, wait_for_reply
+from scheduler_app.graph.builder import graph
+from scheduler_app.infra.database import init_db
+from scheduler_app.infra.telegram import tg_send, tg_get_last_offset, wait_for_reply
 
 
 load_dotenv()

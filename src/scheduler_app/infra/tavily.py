@@ -45,10 +45,6 @@ def search_web(url: str) -> str:
         include_raw_content=True,
     )
 
-    print("--------------------")    # LOCAL DEBUDDING MESSAGE - REMOVE
-    print("----- WEB SEARCH EXECUTED")    # LOCAL DEBUDDING MESSAGE - REMOVE
-    print("--------------------")    # LOCAL DEBUDDING MESSAGE - REMOVE
-
     time.sleep(5)
 
     result = "".join(

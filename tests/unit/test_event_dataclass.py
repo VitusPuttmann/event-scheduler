@@ -4,7 +4,7 @@ Unit test for the event dataclass.
 
 from datetime import date, time
 
-from models.event import Event
+from scheduler_app.models.event import Event
 
 
 def test_from_dict_parses_required_fields():

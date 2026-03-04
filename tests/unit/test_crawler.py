@@ -5,7 +5,7 @@ Unit tests for the crawler.
 import pytest
 import requests
 
-from scheduler_graph.crawler import fetch_website
+from scheduler_app.infra.crawler import fetch_website
 
 
 class MockResponse:

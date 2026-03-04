@@ -7,8 +7,8 @@ import pytest
 
 import duckdb
 
-from models.event import Event
-from scheduler_graph.database import (
+from scheduler_app.models.event import Event
+from scheduler_app.infra.database import (
     ensure_table,
     persist_events_to_db,
     load_events_from_db,

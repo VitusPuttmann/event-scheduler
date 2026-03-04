@@ -5,15 +5,13 @@ Compilation of the LangGraph.
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
 
-from scheduler_graph.state import AgentState
-from scheduler_graph.nodes import (
-    find_events,
-    augment_events,
-    load_events,
-    filter_events,
-    finalize_output,
-)
-from scheduler_graph.edges import check_data_availability
+from scheduler_app.graph.state import AgentState
+from scheduler_app.graph.nodes.find_events import find_events
+from scheduler_app.graph.nodes.augment_events import augment_events
+from scheduler_app.graph.nodes.load_events import load_events
+from scheduler_app.graph.nodes.filter_events import filter_events
+from scheduler_app.graph.nodes.finalize_output import finalize_output
+from scheduler_app.graph.edges import check_data_availability
 
 
 builder = StateGraph(AgentState)

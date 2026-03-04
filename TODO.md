@@ -2,7 +2,12 @@
 
 ## Current
 
-- Check overall directory structure
+- Split the tavily.py
+- Remove load_dotenv() from telegram.py
+- Update langgraph.json
+- Update pyproject.toml and requirements.txt
+- Update README.md
+
 - Revise the entire Event dataclass with a view to required transformations throughout the graph
 - Implement LLM-based reflection at some point
 - Implement graceful degradation

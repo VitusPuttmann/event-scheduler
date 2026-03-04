@@ -2,13 +2,12 @@
 Database access for loading and persisting events.
 """
 
-import os
 from pathlib import Path
 from typing import List
 
 import duckdb
 
-from models.event import Event
+from scheduler_app.models.event import Event
 
 
 EVENTS_TABLE = "events"

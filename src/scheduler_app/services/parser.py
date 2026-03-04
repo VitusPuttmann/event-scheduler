@@ -1,5 +1,5 @@
 """
-Parser for the html content of the fetched website.
+Parser for the HTML content of the fetched website.
 """
 
 import re
@@ -8,7 +8,7 @@ from typing import Optional, List, Dict
 
 from bs4 import BeautifulSoup
 
-from models.event import Event
+from scheduler_app.models.event import Event
 
 
 def _clean_text(s: Optional[str]) -> Optional[str]:

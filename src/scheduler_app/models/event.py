@@ -3,13 +3,21 @@ Classes for events and event patches.
 """
 
 from __future__ import annotations
-
 import hashlib
 from datetime import datetime, date, time
 from dataclasses import dataclass
 from pydantic import BaseModel
 from typing import Optional, List, Literal
 
+
+EventType = Literal[
+    "Klassik",
+    "Jazz, Blues, Funk",
+    "Rock, Indie, Metal",
+    "HipHop, RnB, Soul",
+    "Elektro, Techno, House",
+    "Pop, Schlager",
+]
 
 @dataclass
 class Event:
@@ -61,19 +69,11 @@ class Event:
         )
 
 
-EventType = Literal[
-    "Klassik",
-    "Jazz, Blues, Funk",
-    "Rock, Indie, Metal",
-    "HipHop, RnB, Soul",
-    "Elektro, Techno, House",
-    "Pop, Schlager",
-]
-
 class EventPatch(BaseModel):
     event_id: str
     event_type: Optional[EventType] = None
     event_description: Optional[str] = None
+
 
 class AugmentationResult(BaseModel):
     patches: List[EventPatch]
