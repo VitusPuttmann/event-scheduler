@@ -2,8 +2,6 @@
 
 ## Current
 
-- Implement async ... await
-- Adapt logging for production
 - Check overall directory structure
 - Revise the entire Event dataclass with a view to required transformations throughout the graph
 - Implement LLM-based reflection at some point
