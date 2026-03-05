@@ -6,8 +6,10 @@
 - Update langgraph.json
 - Update pyproject.toml and requirements.txt
 - Update README.md
+- Revise file structure below
 
 - Revise the entire Event dataclass with a view to required transformations throughout the graph
+- Implement requests.Session() for Telegram
 - Implement LLM-based reflection at some point
 - Implement graceful degradation
 - Improve handling of user input for event selection
@@ -76,7 +78,7 @@ Dates covered in local database:
 2026-03-09 (no events)
 2026-03-13 (no events)
 2026-03-14 (events)
-2026-03-15 (no events)
+2026-03-15 (events)
 2026-03-16 (events)
 2026-03-17 (event)
 2026-03-18 (events)
