@@ -1,10 +1,9 @@
 {
   "dependencies": [
-    "langchain_openai",
-    "./my_graph"
+    "."
   ],
   "graphs": {
-    "my_agent": "./my_graph/agent.py:graph"
+    "event_scheduler": "./src/scheduler_app/graph/builder.py:graph"
   },
   "env": "./.env"
 }

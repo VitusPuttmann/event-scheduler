@@ -5,7 +5,26 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "event-scheduler"
 version = "0.1.0"
+description = "LangGraph-based event scheduler for concerts in Hamburg"
+readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+	"beautifulsoup4>=4.14.0",
+	"duckdb>=1.4.0",
+	"langchain-core>=1.2.0",
+	"langchain-openai>=1.1.0",
+	"langgraph>=1.0.0",
+	"lxml>=6.0.0",
+	"pydantic>=2.12.0",
+	"python-dotenv>=1.2.0",
+	"requests>=2.32.0",
+	"tavily>=1.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+	"pytest>=9.0.0",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
