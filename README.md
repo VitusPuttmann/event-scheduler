@@ -1,34 +1,64 @@
 # Event Scheduler
 
-This project develops an application that researches and selects events for its
-users. Currently, it is restricted to concerts in Hamburg in the evening.
+Event Scheduler is a LangGraph-based Python application that finds and suggests
+music events in Hamburg (currently focused on evening concerts).
 
-The application is based on LangGraph.
-
-At this stage, the project primarily serves as a learning exercise for LangGraph
-and is not intended for deployment. Design flaws are therefore part of the process.
+The project is primarily a learning project for LangGraph.
 
 ## Requirements
 
-- Python 3.14  
-- See requirements.txt
+- Python 3.11+
+- A Telegram bot token and chat id
+- API keys for the configured LLM and web search provider
 
 ## Setup
 
-python -m venv .venv  
-.venv/Scripts/Activate.ps1  
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
 
-## Prepare config
+## Configuration
 
-- Create .env based on .env.example
-- Use: LLM_SERVICE="OpenAI"
-- Use: WEBSEARCH_SERVICE="Tavily"
+Create `.env` from `.env.example` and set at least:
 
-## Run
+- `CONTACT_EMAIL`
+- `DUCKDB_PATH` (default: `data/events.duckb`)
+- `LLM_SERVICE="OpenAI"`
+- `OPENAI_MODEL` and `OPENAI_API_KEY`
+- `WEBSEARCH_SERVICE="Tavily"`
+- `TAVILY_API_KEY`
+- `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`
 
-python main.py
+## Run the app
+
+```powershell
+python -m scheduler_app.cli
+```
+
+Optional debug output for checkpoints and logged LLM calls:
+
+```powershell
+python -m scheduler_app.cli --debug-checkpoints
+```
+
+## Run tests
+
+```powershell
+pytest
+```
+
+## LangGraph config
+
+`langgraph.json` is configured for this project:
+
+- dependency root: `.`
+- graph entrypoint: `./src/scheduler_app/graph/builder.py:graph`
+- env file: `./.env`
 
 ## Visualize graph
 
-- Run the first code cell in the notebook graph.ipynb
+Open and run the first code cell in:
+
+- `scripts/graph.ipynb`
