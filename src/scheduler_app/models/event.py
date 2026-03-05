@@ -3,6 +3,7 @@ Classes for events and event patches.
 """
 
 from __future__ import annotations
+
 import hashlib
 from datetime import datetime, date, time
 from dataclasses import dataclass
@@ -87,7 +88,7 @@ def dicts_to_events(events_list_dicts: list[dict]) -> List[Event]:
             Event(
                 event_id=d["event_id"],
                 event_name=d["event_name"],
-                event_date=d["event_date"],
+                event_date=date.fromisoformat(d["event_date"]),
                 event_time=time.fromisoformat(d["event_time"]),
                 event_venue=d.get("event_venue"),
                 event_type=d.get("event_type"),

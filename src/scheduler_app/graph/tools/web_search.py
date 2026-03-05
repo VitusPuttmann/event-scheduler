@@ -13,6 +13,7 @@ def search_web(url: str) -> str:
     """
     Web search via Tavily.
     """
+    
     if not limiter.allow():
         return ""
     
