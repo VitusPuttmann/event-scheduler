@@ -14,7 +14,7 @@ from langchain_core.runnables import RunnableConfig
 from scheduler_app.models.event import Event, AugmentationResult, dicts_to_events
 from scheduler_app.app_logging.log_llm import LLMCallEvent, log_llmcall
 from scheduler_app.graph.state import AgentState
-from scheduler_app.infra.tavily import search_web
+from scheduler_app.graph.tools.web_search import search_web
 from scheduler_app.infra.database import persist_events_to_db, load_events_from_db
 from scheduler_app.infra.llm import create_llm_client
 

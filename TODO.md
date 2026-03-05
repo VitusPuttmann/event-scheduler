@@ -80,3 +80,4 @@ Dates covered in local database:
 2026-03-15 (no events)
 2026-03-16 (events)
 2026-03-17 (event)
+2026-03-18 (events)

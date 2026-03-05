@@ -1,51 +1,39 @@
 """
-Tools for the LangGraph application.
+Tavily client.
 """
 
 import os
 import time
+from typing import Optional
 
 from tavily import TavilyClient
 
-from langchain_core.tools import tool
+
+def _get_client(api_key: Optional[str] = None) -> TavilyClient:
+    key = api_key or os.environ["TAVILY_API_KEY"]
+    return TavilyClient(key)
 
 
-class ToolLimiter:
-    def __init__(self, max_calls: int = 1):
-        self.remaining = max_calls
+def tavily_search(
+    query: str,
+    *,
+    max_results: int = 1,
+    include_answer: bool = False,
+    include_raw_content: bool = True,
+    sleep_seconds: float = 5.0,
+    api_key: Optional[str] = None
+) -> str:
+    client = _get_client(api_key=api_key)
 
-    def allow(self) -> bool:
-        if self.remaining <= 0:
-            return False
-        
-        self.remaining -= 1
-        
-        return True
-
-
-limiter = ToolLimiter(max_calls=3)
-
-
-@tool
-def search_web(url: str) -> str:
-    """
-    Web search for event details subpages via Tavily.
-    """
-    
-    if not limiter.allow():
-        return ""
-
-
-    client = TavilyClient(os.environ["TAVILY_API_KEY"])
-    
     response = client.search(
-        query=url,
-        max_results=1,
-        include_answer=False,
-        include_raw_content=True,
+        query=query,
+        max_results=max_results,
+        include_answer=include_answer,
+        include_raw_content=include_raw_content,
     )
 
-    time.sleep(5)
+    if sleep_seconds:
+        time.sleep(sleep_seconds)
 
     result = "".join(
         entry["raw_content"]
