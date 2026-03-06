@@ -7,29 +7,12 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import sys
+from uuid import uuid4
 
 from langgraph.types import Command
 from scheduler_app.graph.builder import graph
 from scheduler_app.infra.database import init_db
 from scheduler_app.infra.telegram import TelegramClient
-
-
-thread_id = "test_thread_001"
-config = {
-    "configurable": {"thread_id": thread_id}
-}
-
-
-load_dotenv()
-
-MAX_ATTEMPTS = 3
-
-DB_PATH = os.environ["DUCKDB_PATH"]
-
-TG_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-TG_CHAT_ID = int(os.environ["TELEGRAM_CHAT_ID"])
-
-tg_client = TelegramClient(TG_BOT_TOKEN, TG_CHAT_ID)
 
 
 def parse_args() -> argparse.Namespace:
@@ -42,10 +25,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def obtain_input_date() -> tuple[str, int | None]:
+def obtain_input_date(
+    tg_client: TelegramClient,
+    max_attempts: int = 3,
+) -> tuple[str, int | None]:
     offset = tg_client.get_last_offset()
 
-    for attempt in range(MAX_ATTEMPTS):
+    for attempt in range(max_attempts):
         tg_client.send(
             "Gib das gewünschte Datum im Format 'JJJJ-MM-TT' an:"
         )
@@ -65,13 +51,15 @@ def obtain_input_date() -> tuple[str, int | None]:
                 "Das Datum liegt in der Vergangenheit. Bitte gib ein anderes Datum an."
             )
 
-        if attempt == MAX_ATTEMPTS - 1:
+        if attempt == max_attempts - 1:
             tg_client.send("Vielen Dank für Dein Interesse.")
             sys.exit(1)
 
 
 def obtain_event_type(
-    question_text: str, offset: int | None
+    tg_client: TelegramClient,
+    question_text: str,
+    offset: int | None,
 ) -> tuple[str, int | None]:
     tg_client.send(question_text)
 
@@ -80,17 +68,29 @@ def obtain_event_type(
     return response, offset
 
 
-if __name__ == "__main__":
+def main() -> None:
     args = parse_args()
+
+    load_dotenv()
+
+    db_path = os.environ["DUCKDB_PATH"]
+    tg_bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
+    tg_chat_id = int(os.environ["TELEGRAM_CHAT_ID"])
+
+    tg_client = TelegramClient(tg_bot_token, tg_chat_id)
+    config = {
+        "configurable": {"thread_id": f"thread_{uuid4()}"}
+    }
+
     offset = tg_client.get_last_offset()
 
-    user_input_date, offset = obtain_input_date()
+    user_input_date, offset = obtain_input_date(tg_client=tg_client)
     initial_state = {
         "user_input_date": user_input_date
     }
 
-    init_db(DB_PATH)
-    
+    init_db(db_path)
+
     result = graph.invoke(initial_state, config=config)
     while "__interrupt__" in result:
         intr = result["__interrupt__"][0]
@@ -102,7 +102,11 @@ if __name__ == "__main__":
             question_text += option
         question_text += "\nDeine Auswahl:"
 
-        user_choice, offset = obtain_event_type(question_text, offset)
+        user_choice, offset = obtain_event_type(
+            tg_client=tg_client,
+            question_text=question_text,
+            offset=offset,
+        )
 
         result = graph.invoke(
             Command(resume=user_choice),
@@ -110,7 +114,7 @@ if __name__ == "__main__":
         )
 
     output = result["output"]
-    
+
     tg_client.send(output)
 
     if args.debug_checkpoints:
@@ -120,3 +124,7 @@ if __name__ == "__main__":
             print(result["log_llmcalls"])
         except KeyError:
             print("No LLM calls logged.")
+
+
+if __name__ == "__main__":
+    main()
