@@ -15,7 +15,8 @@ class TelegramClient:
     def send(self, text: str) -> None:
         r = requests.post(
             f"{self.api_base}/sendMessage",
-            json={"chat_id": self.chat_id, "text": text}
+            json={"chat_id": self.chat_id, "text": text},
+            timeout=30,
         )
         r.raise_for_status()
 
