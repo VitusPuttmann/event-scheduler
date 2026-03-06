@@ -25,11 +25,17 @@ def finalize_output(
         """
     query_message = """
         Given the input provided as context, produce a text that presents the
-        events in the list with basic information.
-        If there are no events in the list, only state kindly that there are no
+        event with basic information.
+        If public transport station and restaurant recommendations are provided,
+        include one station and one restaurant recommendation in a short section
+        for places near the venue.
+        If there is no event listed, only state kindly that there are no
         suitable events (without offering any further assistance).
         """
-    context=" ".join(str(e) for e in state.events_list_filtered)
+    context = (
+        f"events={state.events_list_filtered}; "
+        f"places_near_venue={state.places_near_venue}"
+    )
 
     events_text = llm_client.invoke([
         SystemMessage(content=system_message),

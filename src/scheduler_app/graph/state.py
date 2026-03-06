@@ -3,7 +3,8 @@ Schema for the LangGraph application state.
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Annotated, Optional, List
+from operator import add
 
 from scheduler_app.models.event import Event
 from scheduler_app.app_logging.log_llm import LLMCallEvent
@@ -26,12 +27,16 @@ class AgentState(BaseModel):
     events_list_filtered: List[Event] = Field(
         default_factory=list, description="Augmented list of events filtered based on user input"
     )
+    places_near_venue: Annotated[List[str], add] = Field(
+        default_factory=list,
+        description="Public transport station and restaurant suggestion near the event venue"
+    )
     output: str = Field(
         "", description="Processed event suggestions for user"
     )
 
     # For logging
-    log_llmcalls: Optional[List[LLMCallEvent]] = Field(
+    log_llmcalls: Annotated[Optional[List[LLMCallEvent]], add] = Field(
         default_factory=list,
         description = "Overview on LLM calls with inputs/outputs and metadata"
     )
