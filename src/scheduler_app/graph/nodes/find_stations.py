@@ -35,7 +35,7 @@ def find_stations(
     """
 
     if not state.events_list_filtered:
-        return {"stations_near_event": []}
+        return {"places_near_venue": []}
 
     selected_event = state.events_list_filtered[0]
 

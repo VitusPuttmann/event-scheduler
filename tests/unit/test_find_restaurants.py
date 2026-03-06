@@ -53,7 +53,7 @@ def test_find_restaurants_returns_empty_when_no_selected_event():
 
     result = find_restaurants(state)
 
-    assert result == {"restaurants_near_event": []}
+    assert result == {"places_near_venue": []}
 
 
 def test_find_restaurants_returns_up_to_three_suggestions(monkeypatch):
@@ -79,6 +79,6 @@ def test_find_restaurants_returns_up_to_three_suggestions(monkeypatch):
 
     result = find_restaurants(state)
 
-    assert len(result["restaurants_near_event"]) == 3
-    assert result["restaurants_near_event"][0].startswith("Restaurant A")
+    assert len(result["places_near_venue"]) == 3
+    assert result["places_near_venue"][0].startswith("Restaurant A")
     assert result["log_llmcalls"][0]["node"] == "find_restaurants"
