@@ -53,10 +53,11 @@ def filter_events(
         event_type_selected = type_map_rev.get(user_choice)
 
         if event_type_selected:
-            events_filtered = [
+            matching_events = [
                 e for e in state.events_list if
                     e.event_type == event_type_selected
             ]
+            events_filtered = matching_events[:1]
         else:
             events_filtered = []
     
