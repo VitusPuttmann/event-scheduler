@@ -11,6 +11,13 @@ docker compose version
 docker info
 ```
 
+### Clone the repository
+
+```powershell
+git clone https://github.com/VitusPuttmann/event-scheduler.git
+cd event-scheduler
+```
+
 ### Configuration
 
 Create your `.env` file before running containers:
