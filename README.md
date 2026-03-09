@@ -17,6 +17,13 @@ The project is primarily a learning project for LangGraph.
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+pip install -e .
+```
+
+If you prefer a single-step package install instead of `requirements.txt`:
+
+```powershell
+pip install .
 ```
 
 ## Configuration

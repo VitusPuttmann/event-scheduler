@@ -2,7 +2,7 @@
 
 Date for testing in local database: 2026-03-19 (events)
 
-- Final check for functionality, security, and refactoring possibilities
+- Final check with new date
 
 ## Current
 
@@ -12,7 +12,7 @@ Date for testing in local database: 2026-03-19 (events)
 - Shift functions for input validation from cli.py to separate scripts
 - Revise the Event dataclass with a view to required transformations throughout the graph
 
-## Additionl
+## Additional
 
 - Improve handling of user input for event selection
 - Implement cost control and graceful degradation for LLM

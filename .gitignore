@@ -9,3 +9,5 @@
 data/
 *.duckdb
 *.egg-info/
+build/
+dist/

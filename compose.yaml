@@ -11,8 +11,19 @@ services:
   server:
     build:
       context: .
+    env_file:
+      - .env
     ports:
       - 8000:8000
+
+  cli:
+    build:
+      context: .
+    env_file:
+      - .env
+    command: ["python", "-m", "scheduler_app.cli"]
+    profiles:
+      - cli
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
