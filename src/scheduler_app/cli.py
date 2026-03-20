@@ -24,7 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--debug-checkpoints",
         action="store_true",
-        help="Print checkpoint count and logged LLM calls",
+        help="Print checkpoint count and logged LLM c1alls",
     )
     return parser.parse_args()
 

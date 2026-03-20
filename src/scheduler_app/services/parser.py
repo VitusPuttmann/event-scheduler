@@ -3,6 +3,7 @@ Parser for the HTML content of the fetched website.
 """
 
 import re
+from datetime import datetime
 from urllib.parse import urljoin
 from typing import Optional, List, Dict
 
@@ -89,8 +90,13 @@ def extract_events(html: str, page_url: str) -> List[Event]:
         event_dict["event_name"] = event_name
 
         info = _extract_info_list(art)
-        event_dict["event_date"] = info["event_date"]
-        event_dict["event_time"] = info["event_time"]
+        raw_date = info["event_date"]
+        event_dict["event_date"] = (
+            datetime.strptime(raw_date, "%d.%m.%Y").strftime("%Y-%m-%d")
+            if raw_date else None
+        )
+        raw_time = info["event_time"]
+        event_dict["event_time"] = raw_time[:5] if raw_time else None
         event_dict["event_venue"] = info["event_venue"]
 
         event_description = _extract_short_description(art)

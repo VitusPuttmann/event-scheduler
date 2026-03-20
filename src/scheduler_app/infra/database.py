@@ -70,7 +70,7 @@ def persist_events_to_db(db_path: str, events: List[Event]) -> None:
                 event_description = COALESCE(EXCLUDED.event_description, {EVENTS_TABLE}.event_description),
                 event_url = COALESCE(EXCLUDED.event_url, {EVENTS_TABLE}.event_url)
             """,
-            [e.to_tuple() for e in events],
+            [e.to_db_tuple() for e in events],
         )
 
 

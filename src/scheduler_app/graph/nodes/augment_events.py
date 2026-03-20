@@ -11,7 +11,7 @@ from typing import List, Optional
 
 from langchain_core.runnables import RunnableConfig
 
-from scheduler_app.models.event import Event, AugmentationResult, dicts_to_events
+from scheduler_app.models.event import Event, AugmentationResult
 from scheduler_app.app_logging.log_llm import LLMCallEvent, log_llmcall
 from scheduler_app.graph.state import AgentState
 from scheduler_app.graph.tools.web_search import search_web
@@ -110,7 +110,7 @@ def augment_events(
             events_list_dicts[idx] |= patch_clean
 
     # Persist events to database
-    events_list_events = dicts_to_events(events_list_dicts)
+    events_list_events = [Event.from_dict(d) for d in events_list_dicts]
     persist_events_to_db(os.environ["DUCKDB_PATH"], events_list_events)
 
     # Log information on LLM call
