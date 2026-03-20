@@ -1,13 +1,10 @@
 # To-Dos for the Event Scheduler
 
-Date for testing in local database: 2026-03-19 (events)
-
-- Final check with new date
+Date for testing in local database: 2026-03-20
 
 ## Current
 
-- Address security of f-strings in database
-- Deal with environment variables in Docker
+- ~~Address security of f-strings in database~~
 - Implement requests.Session() for Telegram and streaming event updates during execution
 - Shift functions for input validation from cli.py to separate scripts
 - Revise the Event dataclass with a view to required transformations throughout the graph

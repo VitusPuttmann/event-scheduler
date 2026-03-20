@@ -12,8 +12,16 @@ from scheduler_app.models.event import Event
 
 EVENTS_TABLE = "events"
 
+_ALLOWED_TABLES = frozenset({EVENTS_TABLE})
+
+
+def _validate_table_name(table_name: str) -> None:
+    if table_name not in _ALLOWED_TABLES:
+        raise ValueError(f"Unknown table name: {table_name!r}")
+
 
 def ensure_table(con: duckdb.DuckDBPyConnection, table_name: str) -> None:
+    _validate_table_name(table_name)
     exists = con.execute(
             """
             SELECT 1
@@ -48,6 +56,7 @@ def init_db(db_path) -> None:
 
 
 def persist_events_to_db(db_path: str, events: List[Event]) -> None:
+    _validate_table_name(EVENTS_TABLE)
     with duckdb.connect(db_path) as con:
 
         ensure_table(con, EVENTS_TABLE)
@@ -66,6 +75,7 @@ def persist_events_to_db(db_path: str, events: List[Event]) -> None:
 
 
 def load_events_from_db(db_path: str, select_date: str) -> List[tuple]:
+    _validate_table_name(EVENTS_TABLE)
     with duckdb.connect(db_path) as con:
         result = con.execute(
             f"""
