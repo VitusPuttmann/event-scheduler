@@ -11,9 +11,17 @@ class TelegramClient:
         self.bot_token = bot_token
         self.chat_id = chat_id
         self.api_base = f"https://api.telegram.org/bot{bot_token}"
+        
+    def __enter__(self):
+        self.session = requests.Session()
+        return self
 
+    def __exit__(self, *_):
+        self.session.close()
+        return False
+    
     def send(self, text: str) -> None:
-        r = requests.post(
+        r = self.session.post(
             f"{self.api_base}/sendMessage",
             json={"chat_id": self.chat_id, "text": text},
             timeout=30,
@@ -25,7 +33,7 @@ class TelegramClient:
         if offset is not None:
             payload["offset"] = offset
         
-        r = requests.get(
+        r = self.session.get(
             f"{self.api_base}/getUpdates",
             params=payload,
             timeout=timeout + 15

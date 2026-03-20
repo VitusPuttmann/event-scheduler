@@ -77,53 +77,53 @@ def main() -> None:
     tg_bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
     tg_chat_id = int(os.environ["TELEGRAM_CHAT_ID"])
 
-    tg_client = TelegramClient(tg_bot_token, tg_chat_id)
-    config = {
-        "configurable": {"thread_id": f"thread_{uuid4()}"}
-    }
+    with TelegramClient(tg_bot_token, tg_chat_id) as tg_client:
+        config = {
+            "configurable": {"thread_id": f"thread_{uuid4()}"}
+        }
 
-    offset = tg_client.get_last_offset()
+        offset = tg_client.get_last_offset()
 
-    user_input_date, offset = obtain_input_date(tg_client=tg_client)
-    initial_state = {
-        "user_input_date": user_input_date
-    }
+        user_input_date, offset = obtain_input_date(tg_client=tg_client)
+        initial_state = {
+            "user_input_date": user_input_date
+        }
 
-    init_db(db_path)
+        init_db(db_path)
 
-    result = graph.invoke(initial_state, config=config)
-    while "__interrupt__" in result:
-        intr = result["__interrupt__"][0]
-        payload = intr.value
+        result = graph.invoke(initial_state, config=config)
+        while "__interrupt__" in result:
+            intr = result["__interrupt__"][0]
+            payload = intr.value
 
-        question_text = payload["question"]
-        for option in payload["data"]:
-            question_text += "\n"
-            question_text += option
-        question_text += "\nDeine Auswahl:"
+            question_text = payload["question"]
+            for option in payload["data"]:
+                question_text += "\n"
+                question_text += option
+            question_text += "\nDeine Auswahl:"
 
-        user_choice, offset = obtain_event_type(
-            tg_client=tg_client,
-            question_text=question_text,
-            offset=offset,
-        )
+            user_choice, offset = obtain_event_type(
+                tg_client=tg_client,
+                question_text=question_text,
+                offset=offset,
+            )
 
-        result = graph.invoke(
-            Command(resume=user_choice),
-            config=config
-        )
+            result = graph.invoke(
+                Command(resume=user_choice),
+                config=config
+            )
 
-    output = result["output"]
+        output = result["output"]
 
-    tg_client.send(output)
+        tg_client.send(output)
 
-    if args.debug_checkpoints:
-        history = list(graph.get_state_history(config))
-        print(f"{len(history)} checkpoints recorded")
-        try:
-            print(result["log_llmcalls"])
-        except KeyError:
-            print("No LLM calls logged.")
+        if args.debug_checkpoints:
+            history = list(graph.get_state_history(config))
+            print(f"{len(history)} checkpoints recorded")
+            try:
+                print(result["log_llmcalls"])
+            except KeyError:
+                print("No LLM calls logged.")
 
 
 if __name__ == "__main__":
