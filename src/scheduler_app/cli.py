@@ -64,10 +64,13 @@ def main() -> None:
                 question_text += option
             question_text += "\nDeine Auswahl:"
 
+            valid_numbers = {opt.split()[0] for opt in payload["data"]}
+
             user_choice, offset = obtain_event_type(
                 tg_client=tg_client,
                 question_text=question_text,
                 offset=offset,
+                valid_numbers=valid_numbers,
             )
 
             result = graph.invoke(

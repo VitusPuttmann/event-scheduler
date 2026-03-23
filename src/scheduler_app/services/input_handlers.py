@@ -46,9 +46,21 @@ def obtain_event_type(
     tg_client: TelegramClient,
     question_text: str,
     offset: int | None,
-) -> tuple[str, int | None]:
-    tg_client.send(question_text)
+    valid_numbers: set[str],
+    max_attempts: int = 3,
+) -> tuple[str, int | None]:  # type: ignore[return]
+    for attempt in range(max_attempts):
+        tg_client.send(question_text)
+        response, offset = tg_client.wait_for_reply(offset=offset)
+        response = response.strip()
 
-    response, offset = tg_client.wait_for_reply(offset=offset)
+        if response in valid_numbers:
+            return response, offset
 
-    return response, offset
+        tg_client.send(
+            f"Ungültige Eingabe. Bitte gib eine der folgenden Nummern an: {', '.join(sorted(valid_numbers))}"
+        )
+
+        if attempt == max_attempts - 1:
+            tg_client.send("Vielen Dank für Dein Interesse.")
+            raise MaxAttemptsExceeded
