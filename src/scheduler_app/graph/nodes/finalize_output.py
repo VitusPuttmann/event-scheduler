@@ -19,7 +19,7 @@ def finalize_output(
     # Query LLM for final output message
     llm_client, token_counter = create_llm_client(
         service=os.environ["LLM_SERVICE"],
-        dollars_expended=state.dollars_expended,
+        dollars_already_spent=state.dollars_expended,
         budget_exceeded=state.budget_exceeded
     )
 
@@ -56,7 +56,7 @@ def finalize_output(
     # Update state
     updated_state = {
         "output": output,
-        "dollars_expended": token_counter.dollars_expended,
+        "dollars_expended": token_counter.dollars_spent_this_node,
         "budget_exceeded": token_counter.budget_exceeded
     }
     return updated_state

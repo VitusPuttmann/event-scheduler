@@ -9,12 +9,12 @@ from scheduler_app.utils.rate_limit import limiter
 
 
 @tool
-def search_web(url: str) -> str:
+def search_web(query: str) -> str:
     """
     Web search via Tavily.
     """
-    
+
     if not limiter.allow():
         return ""
-    
-    return tavily_search(query=url, max_results=1)
+
+    return tavily_search(query=query, max_results=1)

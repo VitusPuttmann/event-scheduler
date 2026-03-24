@@ -3,12 +3,11 @@ Node for findings events.
 """
 
 import os
-from typing import List, Optional
+from typing import Optional
 
 import requests
 from langchain_core.runnables import RunnableConfig
 
-from scheduler_app.models.event import Event
 from scheduler_app.graph.state import AgentState
 from scheduler_app.infra.crawler import fetch_website
 from scheduler_app.services.parser import extract_events
@@ -17,7 +16,7 @@ from scheduler_app.infra.database import persist_events_to_db
 
 def find_events(
         state: AgentState, config: Optional[RunnableConfig] = None
-    ) -> dict[str, List[Event]]:
+    ) -> dict:
     """
     Obtain and prepare data with events from web scraping.
     """
@@ -37,5 +36,5 @@ def find_events(
         events = []
 
     # Update state
-    updated_state = {"events_raw": events}
+    updated_state = {}
     return updated_state

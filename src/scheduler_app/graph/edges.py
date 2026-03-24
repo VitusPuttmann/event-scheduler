@@ -11,10 +11,7 @@ import duckdb
 from langchain_core.runnables import RunnableConfig
 
 from scheduler_app.graph.state import AgentState
-from scheduler_app.infra.database import load_events_from_db
-
-
-EVENTS_TABLE = "events"
+from scheduler_app.infra.database import load_events_from_db, EVENTS_TABLE
 
 
 def check_data_availability(

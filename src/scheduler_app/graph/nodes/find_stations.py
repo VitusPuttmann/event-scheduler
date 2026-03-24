@@ -101,7 +101,7 @@ def find_stations(
 
     return {
         "places_near_venue": suggestions,
-        "log_llmcalls": (state.log_llmcalls or []) + [llmcall_log_entry],
+        "log_llmcalls": [llmcall_log_entry],
         "dollars_expended": token_counter.dollars_spent_this_node,
         "budget_exceeded": token_counter.budget_exceeded,
     }

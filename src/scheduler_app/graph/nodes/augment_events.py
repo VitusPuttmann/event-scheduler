@@ -135,7 +135,7 @@ def augment_events(
     # Update state
     updated_state = {
         "events_list": events_list_events,
-        "log_llmcalls": state.log_llmcalls + [llmcall_log_entry],
+        "log_llmcalls": [llmcall_log_entry],
         "dollars_expended": token_counter.dollars_spent_this_node,
         "budget_exceeded": token_counter.budget_exceeded
     }

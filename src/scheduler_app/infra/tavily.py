@@ -9,11 +9,6 @@ from typing import Optional
 from tavily import TavilyClient
 
 
-def _get_client(api_key: Optional[str] = None) -> TavilyClient:
-    key = api_key or os.environ["TAVILY_API_KEY"]
-    return TavilyClient(key)
-
-
 def tavily_search(
     query: str,
     *,
@@ -23,7 +18,7 @@ def tavily_search(
     sleep_seconds: float = 5.0,
     api_key: Optional[str] = None
 ) -> str:
-    client = _get_client(api_key=api_key)
+    client = TavilyClient(api_key or os.environ["TAVILY_API_KEY"])
 
     try:
         response = client.search(
