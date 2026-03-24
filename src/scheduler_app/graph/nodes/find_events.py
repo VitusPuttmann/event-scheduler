@@ -5,6 +5,7 @@ Node for findings events.
 import os
 from typing import List, Optional
 
+import requests
 from langchain_core.runnables import RunnableConfig
 
 from scheduler_app.models.event import Event
@@ -21,15 +22,20 @@ def find_events(
     Obtain and prepare data with events from web scraping.
     """
 
-    # Crawl web page
-    date, url, html = fetch_website(state.user_input_date)
-    
-    # Parse output
-    events = extract_events(html, url)
+    try:
+        # Crawl web page
+        date, url, html = fetch_website(state.user_input_date)
 
-    # Persist events to database
-    persist_events_to_db(os.environ["DUCKDB_PATH"], events)
-    
+        # Parse output
+        events = extract_events(html, url)
+
+        # Persist events to database
+        persist_events_to_db(os.environ["DUCKDB_PATH"], events)
+
+    except requests.exceptions.RequestException as exc:
+        print(f"Failed to fetch event listing: {exc}")
+        events = []
+
     # Update state
     updated_state = {"events_raw": events}
     return updated_state

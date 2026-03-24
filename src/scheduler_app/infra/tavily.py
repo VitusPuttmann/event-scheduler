@@ -25,15 +25,20 @@ def tavily_search(
 ) -> str:
     client = _get_client(api_key=api_key)
 
-    response = client.search(
-        query=query,
-        max_results=max_results,
-        include_answer=include_answer,
-        include_raw_content=include_raw_content,
-    )
+    try:
+        response = client.search(
+            query=query,
+            max_results=max_results,
+            include_answer=include_answer,
+            include_raw_content=include_raw_content,
+        )
 
-    if sleep_seconds:
-        time.sleep(sleep_seconds)
+        if sleep_seconds:
+            time.sleep(sleep_seconds)
+
+    except Exception as exc:
+        print(f"Tavily search failed: {exc}")
+        return ""
 
     result = "".join(
         entry["raw_content"]
