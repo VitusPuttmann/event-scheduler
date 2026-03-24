@@ -11,14 +11,12 @@ ARG UID=10001
 RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid "${UID}" appuser
 
 # Copy metadata first for caching
-COPY pyproject.toml* setup.cfg* setup.py* requirements.txt* /app/
-
-RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml* setup.cfg* setup.py* /app/
 
 # Copy source
 COPY src/ /app/src/
 
-# Install your src-layout package so `scheduler_app` is importable
+# Install package and dependencies
 RUN python -m pip install --no-cache-dir .
 
 # Ensure non-root can read app files
