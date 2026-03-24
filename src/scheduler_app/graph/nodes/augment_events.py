@@ -62,7 +62,7 @@ def augment_events(
     # Query LLM to define event type and expand event description
     llm_client, token_counter = create_llm_client(
         service=os.environ["LLM_SERVICE"],
-        dollars_expended=state.dollars_expended,
+        dollars_already_spent=state.dollars_expended,
         budget_exceeded=state.budget_exceeded
     )
 
@@ -107,7 +107,7 @@ def augment_events(
         patch_clean = {
             k: v for k, v in patch.model_dump().items()
             if v is not None and k != "event_id"}
-        
+
         idx = next(
             (i for i, d in enumerate(events_list_dicts)
              if d["event_id"] == patch.event_id),
@@ -136,7 +136,7 @@ def augment_events(
     updated_state = {
         "events_list": events_list_events,
         "log_llmcalls": state.log_llmcalls + [llmcall_log_entry],
-        "dollars_expended": token_counter.dollars_expended,
+        "dollars_expended": token_counter.dollars_spent_this_node,
         "budget_exceeded": token_counter.budget_exceeded
     }
     return updated_state

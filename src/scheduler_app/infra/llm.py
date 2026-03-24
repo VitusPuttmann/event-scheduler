@@ -24,7 +24,7 @@ llm_service_registry = {
 
 
 class TokenCounter(BaseCallbackHandler):
-    def __init__(self, service, dollars_expended, budget_exceeded):
+    def __init__(self, service, dollars_already_spent, budget_exceeded):
         self.service = service
         self.input_token_field = (
             llm_service_registry[self.service]["input_token_field"]
@@ -38,13 +38,14 @@ class TokenCounter(BaseCallbackHandler):
         self.output_token_cost = (
             float(os.environ[llm_service_registry[service]["output_cost_env"]]) / 1e6
         )
-        self.dollars_expended = dollars_expended
+        self.dollars_spent_this_node = 0.0
+        self.dollars_already_spent = dollars_already_spent
         self.budget_limit = float(os.environ["BUDGET_LIMIT"])
         self.budget_exceeded = budget_exceeded
-    
+
     def on_llm_end(self, response, **kwargs):
         usage = response.llm_output.get("token_usage", {})
-        
+
         expended = (
             (
                 usage.get(self.input_token_field, 0) *
@@ -55,15 +56,15 @@ class TokenCounter(BaseCallbackHandler):
                 self.output_token_cost
             )
         )
-        self.dollars_expended += expended
-        
-        if self.dollars_expended >= self.budget_limit:
+        self.dollars_spent_this_node += expended
+
+        if self.dollars_already_spent + self.dollars_spent_this_node >= self.budget_limit:
             self.budget_exceeded = True
 
 
 def create_llm_client(
         service: str,
-        dollars_expended: float,
+        dollars_already_spent: float,
         budget_exceeded: bool
     ) -> tuple[BaseChatModel, TokenCounter]:
     """
@@ -78,6 +79,6 @@ def create_llm_client(
     except KeyError:
         raise ValueError(f"Unsupported LLM service: '{service}'.")    
 
-    token_counter = TokenCounter(service, dollars_expended, budget_exceeded)
+    token_counter = TokenCounter(service, dollars_already_spent, budget_exceeded)
 
     return factory(), token_counter

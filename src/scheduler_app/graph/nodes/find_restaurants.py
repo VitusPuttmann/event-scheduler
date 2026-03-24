@@ -41,7 +41,7 @@ def find_restaurants(
 
     llm_client, token_counter = create_llm_client(
         service=os.environ["LLM_SERVICE"],
-        dollars_expended=state.dollars_expended,
+        dollars_already_spent=state.dollars_expended,
         budget_exceeded=state.budget_exceeded
     )
     llm_client_with_tool = llm_client.bind_tools([search_web])
@@ -102,6 +102,6 @@ def find_restaurants(
     return {
         "places_near_venue": suggestions,
         "log_llmcalls": (state.log_llmcalls or []) + [llmcall_log_entry],
-        "dollars_expended": token_counter.dollars_expended,
+        "dollars_expended": token_counter.dollars_spent_this_node,
         "budget_exceeded": token_counter.budget_exceeded,
     }

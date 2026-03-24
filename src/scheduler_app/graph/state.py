@@ -2,12 +2,16 @@
 Schema for the LangGraph application state.
 """
 
+import operator
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional, List
-from operator import add
 
 from scheduler_app.models.event import Event
 from scheduler_app.app_logging.log_llm import LLMCallEvent
+
+
+def _or(a: bool, b: bool) -> bool:
+    return a or b
 
 
 class AgentState(BaseModel):
@@ -27,7 +31,7 @@ class AgentState(BaseModel):
     events_list_filtered: List[Event] = Field(
         default_factory=list, description="Augmented list of events filtered based on user input"
     )
-    places_near_venue: Annotated[List[str], add] = Field(
+    places_near_venue: Annotated[List[str], operator.add] = Field(
         default_factory=list,
         description="Public transport station and restaurant suggestion near the event venue"
     )
@@ -36,15 +40,15 @@ class AgentState(BaseModel):
     )
 
     # For budget control
-    dollars_expended: float = Field(
+    dollars_expended: Annotated[float, operator.add] = Field(
         0, description="Amount of dollars expended for LLM calls"
     )
-    budget_exceeded: bool = Field(
+    budget_exceeded: Annotated[bool, _or] = Field(
         False, description="Flag for whether budget limit is exceeded"
     )
-    
+
     # For logging
-    log_llmcalls: Annotated[Optional[List[LLMCallEvent]], add] = Field(
+    log_llmcalls: Annotated[Optional[List[LLMCallEvent]], operator.add] = Field(
         default_factory=list,
-        description = "Overview on LLM calls with inputs/outputs and metadata"
+        description="Overview on LLM calls with inputs/outputs and metadata"
     )
