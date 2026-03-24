@@ -22,6 +22,9 @@ dependencies = [
 	"tavily>=1.1.0",
 ]
 
+[project.scripts]
+event-scheduler = "scheduler_app.cli:main"
+
 [project.optional-dependencies]
 dev = [
 	"pytest>=9.0.0",

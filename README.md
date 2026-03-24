@@ -39,17 +39,10 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-3. Install dependencies and the application package:
+3. Install the application package and dependencies:
 
 ```powershell
-pip install -r requirements.txt
-pip install -e .
-```
-
-Alternative single-step package install:
-
-```powershell
-pip install .
+pip install -e ".[dev]"
 ```
 
 ## Alternative Setup (Docker)
@@ -74,7 +67,7 @@ docker compose run --rm cli
 Create `.env` from `.env.example` and set at least:
 
 - `CONTACT_EMAIL`
-- `DUCKDB_PATH` (default: `data/events.duckb`)
+- `DUCKDB_PATH` (default: `data/events.duckdb`)
 - `LLM_SERVICE="OpenAI"`
 - `OPENAI_MODEL` and `OPENAI_API_KEY`
 - `WEBSEARCH_SERVICE="Tavily"`
@@ -84,13 +77,13 @@ Create `.env` from `.env.example` and set at least:
 ## Run the app
 
 ```powershell
-python -m scheduler_app.cli
+event-scheduler
 ```
 
 Optional debug output for checkpoints and logged LLM calls:
 
 ```powershell
-python -m scheduler_app.cli --debug-checkpoints
+event-scheduler --debug-checkpoints
 ```
 
 ## Run tests
