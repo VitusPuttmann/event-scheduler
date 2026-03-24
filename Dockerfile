@@ -20,7 +20,7 @@ COPY src/ /app/src/
 RUN python -m pip install --no-cache-dir .
 
 # Ensure non-root can read app files
-RUN chown -R appuser:appuser /app
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
