@@ -35,6 +35,14 @@ class AgentState(BaseModel):
         "", description="Processed event suggestions for user"
     )
 
+    # For budget control
+    dollars_expended: float = Field(
+        0, description="Amount of dollars expended for LLM calls"
+    )
+    budget_exceeded: bool = Field(
+        False, description="Flag for whether budget limit is exceeded"
+    )
+    
     # For logging
     log_llmcalls: Annotated[Optional[List[LLMCallEvent]], add] = Field(
         default_factory=list,

@@ -60,7 +60,11 @@ def augment_events(
         )
 
     # Query LLM to define event type and expand event description
-    llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
+    llm_client, token_counter = create_llm_client(
+        service=os.environ["LLM_SERVICE"],
+        dollars_expended=state.dollars_expended,
+        budget_exceeded=state.budget_exceeded
+    )
 
     llm_client_with_tool = llm_client.bind_tools([search_web])
     augmenter = llm_client_with_tool.with_structured_output(AugmentationResult)
@@ -83,12 +87,16 @@ def augment_events(
     ]
 
     patches = []
-    attempts = 0
+    attempts = 0  # For LLM call logging
     for attempt in range(MAX_RETRIES):
-        attempts += 1
+        if token_counter.budget_exceeded:
+            break
 
+        attempts += 1
         try:
-            llm_output: AugmentationResult = augmenter.invoke(msg)
+            llm_output: AugmentationResult = augmenter.invoke(
+                msg, config={"callbacks": [token_counter]}
+            )
             patches = llm_output.patches
             break
         except ValidationError:
@@ -127,6 +135,8 @@ def augment_events(
     # Update state
     updated_state = {
         "events_list": events_list_events,
-        "log_llmcalls": state.log_llmcalls + [llmcall_log_entry]
+        "log_llmcalls": state.log_llmcalls + [llmcall_log_entry],
+        "dollars_expended": token_counter.dollars_expended,
+        "budget_exceeded": token_counter.budget_exceeded
     }
     return updated_state

@@ -17,8 +17,12 @@ def finalize_output(
     ) -> dict[str, str]:
 
     # Query LLM for final output message
-    llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
-    
+    llm_client, token_counter = create_llm_client(
+        service=os.environ["LLM_SERVICE"],
+        dollars_expended=state.dollars_expended,
+        budget_exceeded=state.budget_exceeded
+    )
+
     system_message = """
         You are a friendly guide that provides helpful event suggestions in German.
         Use the "Du"-form and not the "Sie"-form.
@@ -37,12 +41,22 @@ def finalize_output(
         f"places_near_venue={state.places_near_venue}"
     )
 
-    events_text = llm_client.invoke([
-        SystemMessage(content=system_message),
-        HumanMessage(content=query_message),
-        HumanMessage(content=context)
-    ])
+    output = ""
+    if not token_counter.budget_exceeded:
+        events_text = llm_client.invoke(
+            [
+                SystemMessage(content=system_message),
+                HumanMessage(content=query_message),
+                HumanMessage(content=context)
+            ],
+            config={"callbacks": [token_counter]}
+        )
+        output = events_text.content
 
     # Update state
-    updated_state = {"output": events_text.content}
+    updated_state = {
+        "output": output,
+        "dollars_expended": token_counter.dollars_expended,
+        "budget_exceeded": token_counter.budget_exceeded
+    }
     return updated_state

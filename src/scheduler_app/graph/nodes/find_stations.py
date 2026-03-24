@@ -39,7 +39,11 @@ def find_stations(
 
     selected_event = state.events_list_filtered[0]
 
-    llm_client = create_llm_client(service=os.environ["LLM_SERVICE"])
+    llm_client, token_counter = create_llm_client(
+        service=os.environ["LLM_SERVICE"],
+        dollars_expended=state.dollars_expended,
+        budget_exceeded=state.budget_exceeded
+    )
     llm_client_with_tool = llm_client.bind_tools([search_web])
     locator = llm_client_with_tool.with_structured_output(StationSearchResult) # pyright: ignore[reportAttributeAccessIssue]
 
@@ -71,10 +75,14 @@ def find_stations(
     suggestions: List[str] = []
     attempts = 0
     for attempt in range(MAX_RETRIES):
-        attempts += 1
+        if token_counter.budget_exceeded:
+            break
 
+        attempts += 1
         try:
-            llm_output: StationSearchResult = locator.invoke(msg)
+            llm_output: StationSearchResult = locator.invoke(
+                msg, config={"callbacks": [token_counter]}
+            )
             suggestions = llm_output.stations[:3]
             break
         except ValidationError:
@@ -94,4 +102,6 @@ def find_stations(
     return {
         "places_near_venue": suggestions,
         "log_llmcalls": (state.log_llmcalls or []) + [llmcall_log_entry],
+        "dollars_expended": token_counter.dollars_expended,
+        "budget_exceeded": token_counter.budget_exceeded,
     }
